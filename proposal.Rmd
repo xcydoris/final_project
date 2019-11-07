@@ -2,7 +2,7 @@
 title: "proposal"
 author: "Chuyue Xiang"
 date: "11/6/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
