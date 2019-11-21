@@ -1,11 +1,18 @@
 ---
 title: "Final"
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-RMD file for final
+library(tidyverse)
+
+# Directories
+final = read_csv("./data/HIV_AIDS_Diagnoses_by_Neighborhood__Sex__and_Race_Ethnicity.csv")
+
+final_location = read_csv("./data/HIV_Testing_Locations.csv")
 ```
 
