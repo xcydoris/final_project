@@ -1,8 +1,6 @@
 ---
 title: "Final"
 output: github_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -15,4 +13,3 @@ final = read_csv("./data/HIV_AIDS_Diagnoses_by_Neighborhood__Sex__and_Race_Ethni
 
 final_location = read_csv("./data/HIV_Testing_Locations.csv")
 ```
-

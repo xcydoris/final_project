@@ -1,0 +1,76 @@
+---
+title: "Data_cleaning"
+author: "Xiaoyue Ma"
+date: "11/22/2019"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+
+# Directories
+final = read_csv("./data/HIV_AIDS_Diagnoses_by_Neighborhood__Sex__and_Race_Ethnicity.csv")
+
+final_location = read_csv("./data/HIV_Testing_Locations.csv")
+```
+
+
+### data set cleaning
+
+import Manhattan neighborhood to borough data find on the [website](https://www.baruch.cuny.edu/nycdata/population-geography/neighborhoods.htm)
+
+Add the borough info to `final` dataset
+
+```{r}
+## dropping last column because it is empty
+n_to_b = read_csv("./data/Manhattan_Neighborhood_to_Borough.csv")[,-6]
+
+n_to_b = n_to_b %>% 
+  pivot_longer(Brooklyn:`Staten Island`, names_to = "borough", values_to = "neighborhood") %>%
+  na.omit()
+
+final = final %>% janitor::clean_names()
+
+extract_nbh = function(x){
+  # split the string by "-"
+  splited = unlist(strsplit(x, "-"))
+  if (length(splited) > 1){
+    # get the last string because it contains the actual address
+    last = tail(splited, n=1)
+    if (last == " Murray Hill"){
+      return(substr(splited[1], 1, 8))
+    }
+    # obmit the space at the begining
+    return(substr(last, 2, nchar(last)))
+  } else{
+    return(splited)
+  }
+}
+
+final = final %>%
+  mutate(neighborhood = unlist(map(neighborhood_u_h_f, extract_nbh)))
+
+final = left_join(final, n_to_b, by="neighborhood")
+
+```
+
+Try to fix some mismatch of spelling
+
+```{r}
+final[which(final$neighborhood == "Southeast Queens"),]$borough = "Queens"
+final[which(final$neighborhood == "Southwest Queens"),]$borough = "Queens"
+final[which(final$neighborhood == "West Queens"),]$borough = "Queens"
+final[which(final$neighborhood == "Rockaway"),]$borough = "Queens"
+final[which(final$neighborhood == "Upper Westside"),]$borough = "Manhattan"
+final[which(final$neighborhood == "Upper Eastside"),]$borough = "Manhattan"
+final[which(final$neighborhood == "Lower Eastside"),]$borough = "Manhattan"
+final[which(final$neighborhood == "Lower Manhattan"),]$borough = "Manhattan"
+final[which(final$neighborhood == "Bronx Park"),]$borough = "Bronx"
+final[which(final$neighborhood == "Tremont"),]$borough = "Bronx"
+final[which(final$neighborhood == "Northeast Bronx"),]$borough = "Bronx"
+final[is.na(final$borough),]
+```
+
