@@ -74,3 +74,8 @@ final[which(final$neighborhood == "Northeast Bronx"),]$borough = "Bronx"
 final[is.na(final$borough),]
 ```
 
+```{r}
+final = na.omit(final)
+skimr::skim(final)
+```
+
