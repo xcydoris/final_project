@@ -10,6 +10,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(ggplot2)
 
 # Directories
 final = read_csv("./data/HIV_AIDS_Diagnoses_by_Neighborhood__Sex__and_Race_Ethnicity.csv")
@@ -78,4 +79,30 @@ final[is.na(final$borough),]
 final = na.omit(final)
 skimr::skim(final)
 ```
+
+```{r}
+final = final%>% 
+  select(-neighborhood, -neighborhood_u_h_f) %>% 
+  mutate(year = as.factor(year)) %>% 
+  mutate(sex = as.factor(sex)) %>% 
+  mutate(total_number_of_hiv_diagnoses = as.numeric(total_number_of_hiv_diagnoses)) %>% 
+  mutate(hiv_diagnoses_per_100_000_population = as.numeric(hiv_diagnoses_per_100_000_population)) %>% 
+  mutate(total_number_of_concurrent_hiv_aids_diagnoses = as.numeric(total_number_of_concurrent_hiv_aids_diagnoses)) %>% 
+  mutate(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses = as.numeric(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses)) %>% 
+  mutate(total_number_of_aids_diagnoses   = as.numeric(total_number_of_aids_diagnoses  )) %>% 
+  mutate(aids_diagnoses_per_100_000_population  = as.numeric(aids_diagnoses_per_100_000_population))
+
+
+
+final %>% 
+  filter(!race_ethnicity == "Unknown") %>% 
+  group_by(borough, sex) %>% 
+  mutate(n = sum(total_number_of_hiv_diagnoses)) %>% 
+  knitr::kable()
+
+
+str(final)
+  
+```
+
 
