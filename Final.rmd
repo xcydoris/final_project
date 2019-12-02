@@ -13,3 +13,101 @@ final = read_csv("./data/HIV_AIDS_Diagnoses_by_Neighborhood__Sex__and_Race_Ethni
 
 final_location = read_csv("./data/HIV_Testing_Locations.csv")
 ```
+
+```{r}
+final_location = final_location %>% 
+  janitor::clean_names() %>% 
+  mutate_if(is.character, str_to_lower)%>% 
+  select(agency_id, site_name, zip_code, borough, zip_code, low_cost, free) %>% 
+  group_by(borough)
+
+final_location = na.omit(final_location) 
+
+final_location %>% 
+  summarise(zip_code) 
+
+final_location %>% 
+  mutate_if(is.character, str_to_lower)%>% 
+  count(borough) 
+
+# counting number of free and lowcost centers
+
+final_location %>% 
+  group_by(borough) %>%
+  count(low_cost)
+
+final_location %>% 
+  group_by(borough) %>%
+  count(free)
+
+# to count number of distinct values under each variable
+apply(final_location, 2, function(x) length(unique(x)))
+
+# open final dataset and add
+
+final %>% 
+  group_by(borough, sex, year) %>% 
+  summarise(
+    total_hiv_diagnosis = sum(total_number_of_hiv_diagnoses, na.rm = TRUE),
+    total_number_of_concurrent_hiv_aids_diagnoses = sum(total_number_of_concurrent_hiv_aids_diagnoses, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = borough, y = total_hiv_diagnosis)) +
+  geom_col() +
+  facet_grid(~year)
+
+# ggplot for free insurance
+
+final_location %>%
+  janitor::clean_names() %>% 
+  select(agency_id, site_name, zip_code, borough, zip_code, low_cost, free) %>% 
+  mutate_if(is.character, str_to_lower)%>% 
+  mutate_if(is.logical, str_to_lower)%>% 
+  group_by(borough) %>%
+  count(free) %>% 
+  ggplot(aes(x = free, y = n)) +
+  geom_col() +
+  facet_grid(~borough)
+
+# ggplot for low cost 
+
+final_location %>%
+  janitor::clean_names() %>% 
+  select(agency_id, site_name, zip_code, borough, zip_code, low_cost, free) %>% 
+  mutate_if(is.character, str_to_lower)%>% 
+  mutate_if(is.logical, str_to_lower)%>% 
+  group_by(borough) %>%
+  count(low_cost) %>% 
+  ggplot(aes(x = low_cost, y = n)) +
+  geom_col() +
+  facet_grid(~borough)
+
+# creating 2 data sets with grouped by borough and combing data sets
+
+borough_final = final %>% 
+  select(- neighborhood_u_h_f, -neighborhood) %>% 
+  group_by(borough) %>% 
+  summarise(
+    total_hiv_diagnosis = sum(total_number_of_hiv_diagnoses, na.rm = TRUE),
+    total_number_of_concurrent_hiv_aids_diagnoses = sum(total_number_of_concurrent_hiv_aids_diagnoses, na.rm = TRUE),
+    total_number_of_aids_diagnosis = sum(total_number_of_aids_diagnoses, na.rm = TRUE),
+    hiv_diagnoses_per_100_000_population = mean(hiv_diagnoses_per_100_000_population, na.rm = TRUE),
+    proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses = mean(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses, na.rm = TRUE),
+    aids_diagnoses_per_100_000_population = mean(aids_diagnoses_per_100_000_population, na.rm = TRUE)
+  )
+
+borough_location = final_location %>% 
+  select()
+   
+  
+str(borough_final)
+
+  
+  
+  
+
+
+
+
+
+```
+
