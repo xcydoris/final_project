@@ -77,10 +77,24 @@ final[is.na(final$borough),]
 
 ```{r}
 final = na.omit(final)
+
+final = final %>%
+  mutate(total_number_of_concurrent_hiv_aids_diagnoses = as.numeric(total_number_of_concurrent_hiv_aids_diagnoses),
+         total_number_of_aids_diagnoses = as.numeric(total_number_of_aids_diagnoses),
+         total_number_of_hiv_diagnoses = as.numeric(total_number_of_hiv_diagnoses),
+         aids_diagnoses_per_100_000_population = as.numeric(aids_diagnoses_per_100_000_population),
+         hiv_diagnoses_per_100_000_population = as.numeric(hiv_diagnoses_per_100_000_population)) %>%
+  mutate(total_number_of_concurrent_hiv_aids_diagnoses = replace_na(total_number_of_concurrent_hiv_aids_diagnoses, 0),
+         total_number_of_aids_diagnoses = replace_na(total_number_of_aids_diagnoses, 0),
+         total_number_of_hiv_diagnoses = replace_na(total_number_of_hiv_diagnoses, 0),
+         aids_diagnoses_per_100_000_population = replace_na(aids_diagnoses_per_100_000_population,0),
+         hiv_diagnoses_per_100_000_population = replace_na(hiv_diagnoses_per_100_000_population,0))
+  
 skimr::skim(final)
 ```
 
 ```{r}
+<<<<<<< HEAD
 final = final%>% 
   select(-neighborhood, -neighborhood_u_h_f) %>% 
   mutate(year = as.factor(year)) %>% 
@@ -106,3 +120,21 @@ str(final)
 ```
 
 
+=======
+library(ggplot2)
+final %>%
+  group_by(borough) %>%
+  summarise(number_of_testing_location = n(),
+            aids_per_100000 = sum(aids_diagnoses_per_100_000_population)/(number_of_testing_location),
+            hiv_per_100000 = sum(hiv_diagnoses_per_100_000_population)/(number_of_testing_location)) %>%
+  pivot_longer(aids_per_100000:hiv_per_100000,
+               names_to = "type",
+               names_pattern = "(aids|hiv)",
+               values_to = "diagnoses_per_100000") %>%
+  ggplot(aes(x = number_of_testing_location, y = diagnoses_per_100000, color = borough )) + 
+  geom_point() + facet_grid(. ~ type) + labs(title = "Number of testing location vs number of diagnoses per 100,000 people by borough") + xlab("Number of testing location") + ylab("Number of diagnosed patient per 100,000 people")
+  
+```
+
+Clearly from the both plots, there is not a very significant linear relationship. However, since we only have five datapoints, it is very hard to conclude if there is really a significant linear relationship between number of testing location and number of diagnoses in each borough. However, one interesting finding is that while other boroughs all have slightly higher HIV diagnoses rate, Manhattan has a significantly higer rate of HIV dianoses rate than aids, which should be investigated further.
+>>>>>>> b88e530fc32e8f723175aa5c16086d759147745b
