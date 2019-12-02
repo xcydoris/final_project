@@ -96,7 +96,13 @@ borough_final = final %>%
   )
 
 borough_location = final_location %>% 
-  select()
+  select(borough, low_cost, free) %>% 
+  group_by(borough) %>% 
+  summarise(
+    prop_low_cost = n(count(low_cost = TRUE)/())
+    
+  )
+  
    
   
 str(borough_final)
