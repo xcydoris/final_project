@@ -15,6 +15,20 @@ final_location = read_csv("./data/HIV_Testing_Locations.csv")
 ```
 
 ```{r}
+final = final %>%
+  mutate(total_number_of_concurrent_hiv_aids_diagnoses = as.numeric(total_number_of_concurrent_hiv_aids_diagnoses),
+         total_number_of_aids_diagnoses = as.numeric(total_number_of_aids_diagnoses),
+         total_number_of_hiv_diagnoses = as.numeric(total_number_of_hiv_diagnoses),
+         aids_diagnoses_per_100_000_population = as.numeric(aids_diagnoses_per_100_000_population),
+         hiv_diagnoses_per_100_000_population = as.numeric(hiv_diagnoses_per_100_000_population)) %>% 
+mutate(total_number_of_hiv_diagnoses = as.numeric(total_number_of_hiv_diagnoses)) %>%
+mutate(hiv_diagnoses_per_100_000_population = as.numeric(hiv_diagnoses_per_100_000_population)) %>%
+mutate(total_number_of_concurrent_hiv_aids_diagnoses = as.numeric(total_number_of_concurrent_hiv_aids_diagnoses)) %>%
+mutate(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses = as.numeric(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses)) %>%
+mutate(total_number_of_aids_diagnoses   = as.numeric(total_number_of_aids_diagnoses  )) %>%
+mutate(aids_diagnoses_per_100_000_population  = as.numeric(aids_diagnoses_per_100_000_population))
+
+
 final_location = final_location %>% 
   janitor::clean_names() %>% 
   mutate_if(is.character, str_to_lower)%>% 
@@ -41,7 +55,10 @@ final_location %>%
   count(free)
 
 # to count number of distinct values under each variable
-apply(final_location, 2, function(x) length(unique(x)))
+apply(final, 2, function(x) length(unique(x)))
+
+final %>% 
+  summarise(n = count(neighborhood))
 
 # open final dataset and add
 
@@ -87,7 +104,7 @@ borough_final = final %>%
   ungroup() %>% 
   select(- neighborhood_u_h_f, -neighborhood) %>% 
   mutate_if(is.character, str_to_lower)%>% 
-  group_by(borough) %>% 
+  group_by(borough, year) %>% 
   summarise(
     total_hiv_diagnosis = sum(total_number_of_hiv_diagnoses, na.rm = TRUE),
     total_number_of_concurrent_hiv_aids_diagnoses = sum(total_number_of_concurrent_hiv_aids_diagnoses, na.rm = TRUE),
@@ -95,10 +112,65 @@ borough_final = final %>%
     hiv_diagnoses_per_100_000_population = mean(hiv_diagnoses_per_100_000_population, na.rm = TRUE),
     proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses = mean(proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses, na.rm = TRUE),
     aids_diagnoses_per_100_000_population = mean(aids_diagnoses_per_100_000_population, na.rm = TRUE)
-  )
+  ) %>% 
+na.omit()
 
+# time treands of hiv diagnosis rates for each borough
+
+###
+borough_final %>% 
+  ggplot(aes(x = total_hiv_diagnosis, y = total_number_of_aids_diagnosis, color = year)) + 
+  geom_point(alpha = .5) +
+  facet_wrap(~borough)
+  theme(legend.position = "bottom")
+ ###
+  
+  
+  borough_final %>% 
+  ggplot(aes(x = year, y = total_number_of_aids_diagnosis)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+  
+  borough_final %>% 
+  ggplot(aes(x = year, y = total_hiv_diagnosis)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+  
+  borough_final %>% 
+  ggplot(aes(x = year, y = total_number_of_concurrent_hiv_aids_diagnoses)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+  
+  borough_final %>% 
+  ggplot(aes(x = year, y = proportion_of_concurrent_hiv_aids_diagnoses_among_all_hiv_diagnoses)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+  
+   borough_final %>% 
+  ggplot(aes(x = year, y = hiv_diagnoses_per_100_000_population)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+   
+   borough_final %>% 
+  ggplot(aes(x = year, y = aids_diagnoses_per_100_000_population)) + 
+  geom_col(aes(fill = borough), position = "dodge") +
+  theme(legend.position = "bottom")
+   
+  ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+
+ggplot(data = borough_final, y = total_hiv_diagnosis) + 
+  geom_bar(mapping = aes(x = borough, fill = year), position = "dodge")
+  
+tmax_date_p = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "bottom")
 # 
 trial_1 = final_location[-which(final_location$borough == "new york"),]
+
 trial = trial_1 %>% 
   ungroup() %>% 
   group_by(borough) %>% 
@@ -112,13 +184,33 @@ trial = trial_1 %>%
      proportion_free = total_free/sum(count_of_sites),
   )
 
-borough_combined = merge(x = borough_final, y = trial, by = "borough", all = TRUE)
+zip_code = trial_1 %>% 
+  ungroup() %>% 
+  group_by(zip_code, borough) %>% 
+  mutate(low_cost = as.integer(low_cost),
+         free = as.integer(free),
+         count_of_sites = 1) %>% 
+  summarise(
+    total_low_cost = sum(low_cost),
+    total_free = sum(free),
+    proportion_low_cost = total_low_cost/sum(count_of_sites),
+     proportion_free = total_free/sum(count_of_sites),
+  )
 
+borough_combined = merge(x = borough_final, y = trial, by = "borough", all = TRUE) %>% 
+  na.omit()
+  
+borough_combined %>%
+  janitor::clean_names() %>% 
+  select(agency_id, site_name, zip_code, borough, zip_code, low_cost, free) %>% 
+  mutate_if(is.character, str_to_lower)%>% 
+  mutate_if(is.logical, str_to_lower)%>% 
+  group_by(borough) %>%
+  count(low_cost) %>% 
+  ggplot(aes(x = low_cost, y = n)) +
+  geom_col() +
+  facet_grid(~borough)
 
-   
-
-
-    
 str(borough_final)
 
   
