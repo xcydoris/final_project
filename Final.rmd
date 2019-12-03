@@ -84,7 +84,9 @@ final_location %>%
 # creating 2 data sets with grouped by borough and combing data sets
 
 borough_final = final %>% 
+  ungroup() %>% 
   select(- neighborhood_u_h_f, -neighborhood) %>% 
+  mutate_if(is.character, str_to_lower)%>% 
   group_by(borough) %>% 
   summarise(
     total_hiv_diagnosis = sum(total_number_of_hiv_diagnoses, na.rm = TRUE),
@@ -95,16 +97,34 @@ borough_final = final %>%
     aids_diagnoses_per_100_000_population = mean(aids_diagnoses_per_100_000_population, na.rm = TRUE)
   )
 
+# 
+trial_1 = final_location[-which(final_location$borough == "new york"),]
+trial = trial_1 %>% 
+  ungroup() %>% 
+  group_by(borough) %>% 
+  mutate(low_cost = as.integer(low_cost),
+         free = as.integer(free),
+         count_of_sites = 1) %>% 
+  summarise(
+    total_low_cost = sum(low_cost),
+    total_free = sum(free),
+    proportion_low_cost = total_low_cost/sum(count_of_sites),
+     proportion_free = total_free/sum(count_of_sites),
+  )
+
+borough_combined = merge(x = borough_final, y = trial, by = "borough", all = TRUE)
+
 borough_location = final_location %>% 
   select(borough, low_cost, free) %>% 
   group_by(borough) %>% 
-  summarise(
-    prop_low_cost = n(count(low_cost = TRUE)/())
-    
+  summarise(n = count()) %>% 
+  mutate(proportion = n/sum(n))
+    prop_low_cost = n(count()/()
   )
-  
    
-  
+
+
+    
 str(borough_final)
 
   
