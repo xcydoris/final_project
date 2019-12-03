@@ -114,13 +114,7 @@ trial = trial_1 %>%
 
 borough_combined = merge(x = borough_final, y = trial, by = "borough", all = TRUE)
 
-borough_location = final_location %>% 
-  select(borough, low_cost, free) %>% 
-  group_by(borough) %>% 
-  summarise(n = count()) %>% 
-  mutate(proportion = n/sum(n))
-    prop_low_cost = n(count()/()
-  )
+
    
 
 
